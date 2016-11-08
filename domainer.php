@@ -24,7 +24,7 @@ function domainer()
     }
 
     $c_domain = $wpdb->get_results("SELECT extension FROM $table_name where type=1 ORDER BY rand()");
-    
+
     foreach ($c_domain as $row):
         echo $keyword . "." . $row->extension . "<br/>";
         array_push($array_suggest, $keyword . "." . $row->extension);
@@ -34,198 +34,70 @@ function domainer()
         echo $keyword . "." . $row->extension . "<br/>";
         array_push($array_suggest, $row->extension . $keyword . "." . $domain);
     endforeach;
-    $c_prefix = $wpdb->get_results("SELECT extension FROM $table_name where type=3 ORDER BY RAND()");
-    foreach ($c_prefix as $row):
-        echo $keyword . "." . $row->extension . "<br/>";
-        array_push($array_suggest, $row->extension . $keyword . "." . $domain);
-    endforeach;
+
     echo "</br><hr/>";
     for ($i = 1; $i < count($array_suggest); $i++) {
         echo $array_suggest[$i] . "</br>";
     }
-    auth_2($array_suggest);
-
-    //print_r($array_suggest);
-    /* ----------------------------------------
-for($i=1; $i<count($array_suggest); $i++){
-   $nueva=explode(".",$array_suggest[$i]);
-   echo $nueva[0]."</br>";
-       echo $nueva[1]."</br>";
+    request_domains($array_suggest);
 
 }
 
-/*------------------------------------------------
-$array_suggest=array_fill(3,1,$c_domain);
-print_r($array_suggest);
-echo "</br>";
-$c_coloquiales = $wpdb->get_results("SELECT coloquial FROM `wp_coloquiales` where pais = 'peru' or pais = 'todos' order by rand() " );
-array_push($array_suggest,$c_coloquiales);
-print_r($array_suggest);
-
-
-foreach ( $array_suggest as $row ):
-echo "</br>".$row->dominio;
-endforeach;
-    print_r($array_suggest);
-
-/*foreach ( $c_domain as $row ):
-    $array_suggest=array_fill(1,2,$keyword.".".$row->dominio);
-endforeach;
-print_r($array_suggest);
-/*
-
-$c_coloquiales = $wpdb->get_results("SELECT coloquial FROM `wp_coloquiales` where pais = 'peru' or pais = 'todos' order by rand() " );
-foreach ( $c_coloquiales as $row ):
-$array_suggest=array_fill(count($array_suggest)+1,count($c_coloquiales),$row->coloquial.$keyword.".".$domain);
-endforeach;
-//print_r($array_suggest);
-*/
-
-    /*
-    foreach ( $c_domain as $row ):
-    $kjj = auth($keyword,$row->dominio);
-    if($kjj == 1)
-    {echo $keyword.".".$row->dominio." available"."</br>";}
-    else
-    {echo $keyword.".".$row->dominio." no available"."</br>";}
-    endforeach;
-
-    echo "</br>";
-    $c_coloquiales = $wpdb->get_results("SELECT coloquial FROM `wp_coloquiales` where pais = 'peru' or pais = 'todos' order by rand() " );
-    foreach ( $c_coloquiales as $row ):
-    $kjj = auth($row->coloquial.$keyword,$domain);
-    if($kjj == 1)
-    {echo $row->coloquial.$keyword.".".$domain." available"."</br>";}
-    else
-    {echo $row->coloquial.$keyword.".".$domain." no available"."</br>";}
-    endforeach;
-
-    echo "</br>";
-    $c_prefix = $wpdb->get_results( "SELECT prefijo FROM `wp_prefijo` where pais = 'pe' or pais = 'todos' ORDER BY RAND()" );
-    foreach ( $c_prefix as $row	 ):
-    $kjj = auth($row->prefijo.$keyword,$domain);
-    if($kjj == 1)
-    {echo $row->prefijo.$keyword.".".$domain." available"."</br>";}
-    else
-    {echo $row->prefijo.$keyword.".".$domain." no available"."</br>";}
-    endforeach;
-
-    //include('template/domainer.html');
-        //echo $keyword;
-    //	$kjj = auth($keyword,$domain);
-    //	echo $kjj;
-
-        */
-}
-
-function auth_2($array_sugest)
+function request_domains($array_sugest)
 {
-
-    global $ga_username;
-    global $ga_password;
-
-    //https://www.google.com/accounts/ClientLoginaccountType=GOOGLE&Email=derly249@gmail.com&service=analytics&source=My app&Passwd=dwn249//789
-    //$gaUrl = "https://httpapi.com/api/domains/v5/suggest-names.json";
-    //$gaUrl = "https://httpapi.com/api/domains/v5/suggest-names.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&keyword=".$domainer."";
-
-    //$gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=".$domainer."&tlds=".$punto."";
-    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc";
+    $params = '';
     for ($i = 1; $i < count($array_sugest); $i++) {
         $nueva = explode(".", $array_sugest[$i]);
-        $gaUrl .= "&domain-name=" . $nueva[0];
-        $gaUrl .= "&tlds=" . $nueva[1];
+        $params .= "&domain-name=" . $nueva[0];
+        $params .= "&tlds=" . $nueva[1];
 
     }
-    echo "</br>" . $gaUrl . "</br>";
-    //$authData = "auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&keyword=eventus";
 
-    // create a new cURL resource
+    $tokens = get_domains_by_params($params);
+    foreach ($tokens as $fila => $fila2):
+        $respuesta = $tokens->{$fila}->{'status'};
+        $llave = $tokens->{$fila}->{'classkey'};
+        //echo $fila;
+        echo $fila . " estado: " . $respuesta . " llave:" . $llave;
+        echo "</br>";
+    endforeach;
+//
+//        $tokens = explode("\n", trim($response));
+//
+//        $ubicacion = unserialize(file_get_contents('http://www.geoplugin.net/php.gp?ip=200.37.124.213'));
+//        echo "ip :" . $ubicacion['geoplugin_request'];
+//        echo "pais :" . $ubicacion['geoplugin_countryName'];
+
+
+//    curl_close($ch);
+}
+
+/**
+ * @param $params
+ * @return array|mixed|null|object
+ */
+function get_domains_by_params($params)
+{
+    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc" . $params;
     $ch = curl_init();
-
-    // set URL and other appropriate options
     curl_setopt($ch, CURLOPT_URL, $gaUrl);
     curl_setopt($ch, CURLOPT_HEADER, 0);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-    //curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-    /* metodos para post
-        //curl_setopt($ch, CURLOPT_POST, 1);
-         //curl_setopt($ch, CURLOPT_POSTFIELDS, $authData);
-     */
     curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . "/cacert.pem");
     $fileHandle = fopen(dirname(__FILE__) . "/error.txt", "w+");
 
     curl_setopt($ch, CURLOPT_VERBOSE, true);
-
     curl_setopt($ch, CURLOPT_STDERR, $fileHandle);
-
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-    // grab URL and pass it to the browser
     $response = curl_exec($ch);
 
     if (curl_exec($ch) === false) {
         echo 'Curl error: ' . curl_error($ch);
+        $tokens = null;
     } else {
-
-        echo "</br>";
-        //var_dump($response);
-
-        $tokensa = json_decode($response);
-        //$respuesta = $tokensa->{'proeventus.la'}->{'status'};
-        //echo "pruebaabab::". $respuesta;
-        echo "</br>";
-        foreach ($tokensa as $fila => $fila2):
-            $respuesta = $tokensa->{$fila}->{'status'};
-            $llave = $tokensa->{$fila}->{'classkey'};
-            //echo $fila;
-            echo $fila . " estado: " . $respuesta . " llave:" . $llave;
-            echo "</br>";
-        endforeach;
-        /*foreach ( $tokensa as $fila => $fila2):
-            echo "*</br>";
-            print_r($fila2);
-        endforeach;
-*/
-        /*foreach ( $tokensa as $fila => $status	 ):
-            //var_dump($tokensa->$fila->$);
-            echo "</br>--";
-
-            foreach ( $tokensa->$fila as $filas => $stado  ):
-                echo $tokensa->$fila->$filas;
-                endforeach;
-        endforeach;
-        echo "</br>".$respuesta."</br>";
-        */
-        /*if(strcmp($respuesta,"available")!==0){
-            //echo "no hay este dominio";
-            $respuestaf=0;
-        }
-        else{$respuestaf=1;}
-        */
-        $tokensa = explode("\n", trim($response));
-
-        //	print_r($tokensa);
-
-
-        //echo var_export(unserialize(file_get_contents('http://www.geoplugin.net/php.gp?ip='.$_SERVER['REMOTE_ADDR'])));
-        //echo var_export( unserialize(file_get_contents('http://www.geoplugin.net/php.gp?ip=200.37.124.213')));
-
-        $ubicacion = unserialize(file_get_contents('http://www.geoplugin.net/php.gp?ip=200.37.124.213'));
-        echo "ip :" . $ubicacion['geoplugin_request'];
-        echo "pais :" . $ubicacion['geoplugin_countryName'];
-        //var_dump($ubicacion);
-        //echo $ubicacion;
-
-        //$geoubi = json_decode($ubicacion);
-        //$respuesta = $ubicacion->{'geoplugin_request'};
-        //print_r($respuesta);
-
+        $tokens = json_decode($response);
     }
-
-    // close cURL resource, and free up system resources
-    curl_close($ch);
-    //return $respuestaf;
-
+    return $tokens;
 }
 
 function auth($domainer, $punto)
@@ -431,68 +303,191 @@ function domainer_add_ingresos()
 
 if (function_exists('add_action')) {
     add_action('admin_menu', 'domainer_add_menu');
-    //add_action('admin_menu', 'domainer_add_ingresos');
-
-    //add_menu_page( 'BufferCode plugin page', 'Menu plugin settings','manage_options', __FILE__,'buffercode_plugin',plugins_url( '/images/bf.png', __FILE__ ) );
-
-
 }
 
-function domainerBK()
+
+function search_domain($keyword, $extension)
 {
-    global $wpdb;
-    global $domain;
-    global $keyword;
-    $table_name = $wpdb->prefix . "domainers";
-    //$domainer= $wpdb->get_var("SELECT domainer FROM $table_name ORDER BY RAND() LIMIT 0, 1; " );
-    $domainer = $wpdb->get_var("SELECT domainer FROM $table_name ORDER BY $table_name.id desc , 1; ");
-    $kjj = auth($keyword, $domain);
-    if ($kjj == 1) {
-        echo $keyword . "." . $domain . " available" . "</br>";
+    $tmp = $keyword;
+    $i = stripos($keyword, '.');
+    $keyword = substr($tmp, 0, $i);
+    $extension = substr($tmp, strlen($keyword) + 1);
+
+    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
+    // create a new cURL resource
+    $ch = curl_init();
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, $gaUrl);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . "/cacert.pem");
+    $fileHandle = fopen(dirname(__FILE__) . "/error.txt", "w+");
+
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    curl_setopt($ch, CURLOPT_STDERR, $fileHandle);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+    // grab URL and pass it to the browser
+    $response = curl_exec($ch);
+    $result = false;
+
+    if (curl_exec($ch) === false) {
+        echo 'Curl error: ' . curl_error($ch);
     } else {
-        echo $keyword . "." . $domain . " no available" . "</br>";
+        $response_json = json_decode($response);
+        $response_status = $response_json->{'' . $keyword . '.' . $extension . ''}->{"status"};
+        //echo $response_status;
+        if (strcmp($response_status, "available") == 0) {
+            $result = true;
+        }
+
     }
 
-    echo "</br>";
-    $c_dominio = $wpdb->get_results("SELECT dominio FROM `wp_domains` where dominio = 'pe' or pais = 'todos' ORDER BY rand()");
-    foreach ($c_dominio as $fila):
-        $kjj = auth($keyword, $fila->dominio);
-        if ($kjj == 1) {
-            echo $keyword . "." . $fila->dominio . " available" . "</br>";
-        } else {
-            echo $keyword . "." . $fila->dominio . " no available" . "</br>";
-        }
-    endforeach;
-
-    echo "</br>";
-    $c_coloquiales = $wpdb->get_results("SELECT coloquial FROM `wp_coloquiales` where pais = 'peru' or pais = 'todos' order by rand() ");
-    foreach ($c_coloquiales as $fila):
-        $kjj = auth($fila->coloquial . $keyword, $domain);
-        if ($kjj == 1) {
-            echo $fila->coloquial . $keyword . "." . $domain . " available" . "</br>";
-        } else {
-            echo $fila->coloquial . $keyword . "." . $domain . " no available" . "</br>";
-        }
-    endforeach;
-
-    echo "</br>";
-    $c_prefijo = $wpdb->get_results("SELECT prefijo FROM `wp_prefijo` where pais = 'pe' or pais = 'todos' ORDER BY RAND()");
-    foreach ($c_prefijo as $fila):
-        $kjj = auth($fila->prefijo . $keyword, $domain);
-        if ($kjj == 1) {
-            echo $fila->prefijo . $keyword . "." . $domain . " available" . "</br>";
-        } else {
-            echo $fila->prefijo . $keyword . "." . $domain . " no available" . "</br>";
-        }
-    endforeach;
-
-    //include('template/domainer.html');
-    //echo $keyword;
-    //	$kjj = auth($keyword,$domain);
-    //	echo $kjj;
-
-
+    // close cURL resource, and free up system resources
+    curl_close($ch);
+    return $result;
 }
+
+function search_domain_prefix($keyword, $extension)
+{
+    global $wpdb;
+    $array_suggest = array('sd');
+    $table_name = $wpdb->prefix . "domainer";
+
+    $tmp = $keyword;
+    $i = stripos($keyword, '.');
+    $keyword = substr($tmp, 0, $i);
+    $extension = substr($tmp, strlen($keyword) + 1);
+
+    $c_prefix = $wpdb->get_results("SELECT extension FROM $table_name where type=3 ORDER BY RAND()");
+    foreach ($c_prefix as $row):
+        echo $keyword . "." . $row->extension . "<br/>";
+        array_push($array_suggest, $row->extension . $keyword . "." . $array_suggest);
+    endforeach;
+
+    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
+    // create a new cURL resource
+    $ch = curl_init();
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, $gaUrl);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . "/cacert.pem");
+    $fileHandle = fopen(dirname(__FILE__) . "/error.txt", "w+");
+
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    curl_setopt($ch, CURLOPT_STDERR, $fileHandle);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+    // grab URL and pass it to the browser
+    $response = curl_exec($ch);
+    $result = false;
+
+    if (curl_exec($ch) === false) {
+        echo 'Curl error: ' . curl_error($ch);
+    } else {
+        $response_json = json_decode($response);
+        $response_status = $response_json->{'' . $keyword . '.' . $extension . ''}->{"status"};
+        //echo $response_status;
+        if (strcmp($response_status, "available") == 0) {
+            $result = true;
+        }
+
+    }
+
+    // close cURL resource, and free up system resources
+    curl_close($ch);
+    return $result;
+}
+
+function search_domain_extension($keyword, $extension)
+{
+    $tmp = $keyword;
+    $i = stripos($keyword, '.');
+    $keyword = substr($tmp, 0, $i);
+    $extension = substr($tmp, strlen($keyword) + 1);
+
+    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
+    // create a new cURL resource
+    $ch = curl_init();
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, $gaUrl);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . "/cacert.pem");
+    $fileHandle = fopen(dirname(__FILE__) . "/error.txt", "w+");
+
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    curl_setopt($ch, CURLOPT_STDERR, $fileHandle);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+    // grab URL and pass it to the browser
+    $response = curl_exec($ch);
+    $result = false;
+
+    if (curl_exec($ch) === false) {
+        echo 'Curl error: ' . curl_error($ch);
+    } else {
+        $response_json = json_decode($response);
+        $response_status = $response_json->{'' . $keyword . '.' . $extension . ''}->{"status"};
+        //echo $response_status;
+        if (strcmp($response_status, "available") == 0) {
+            $result = true;
+        }
+
+    }
+
+    // close cURL resource, and free up system resources
+    curl_close($ch);
+    return $result;
+}
+
+function search_domain_others($keyword, $extension)
+{
+    $tmp = $keyword;
+    $i = stripos($keyword, '.');
+    $keyword = substr($tmp, 0, $i);
+    $extension = substr($tmp, strlen($keyword) + 1);
+
+    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
+    // create a new cURL resource
+    $ch = curl_init();
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, $gaUrl);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . "/cacert.pem");
+    $fileHandle = fopen(dirname(__FILE__) . "/error.txt", "w+");
+
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    curl_setopt($ch, CURLOPT_STDERR, $fileHandle);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+    // grab URL and pass it to the browser
+    $response = curl_exec($ch);
+    $result = false;
+
+    if (curl_exec($ch) === false) {
+        echo 'Curl error: ' . curl_error($ch);
+    } else {
+        $response_json = json_decode($response);
+        $response_status = $response_json->{'' . $keyword . '.' . $extension . ''}->{"status"};
+        //echo $response_status;
+        if (strcmp($response_status, "available") == 0) {
+            $result = true;
+        }
+
+    }
+
+    // close cURL resource, and free up system resources
+    curl_close($ch);
+    return $result;
+}
+
 
 add_action('activate_domainer/domainer.php', 'domainer_instala');
 add_action('deactivate_domainer/domainer.php', 'domainer_desinstala');
