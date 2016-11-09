@@ -12,34 +12,33 @@ function domainer()
     global $wpdb;
     global $domain;
     global $keyword;
-    $array_suggest = array('sd');
-    $table_name = $wpdb->prefix . "domainer";
-    //$domainer= $wpdb->get_var("SELECT domainer FROM $table_name ORDER BY RAND() LIMIT 0, 1; " );
-//    $domainer = $wpdb->get_var("SELECT domainer FROM $table_name ORDER BY $table_name.id desc , 1; ");
-    $kjj = auth($keyword, $domain);
-    if ($kjj == 1) {
-        echo $keyword . "." . $domain . " available" . "</br>";
-    } else {
-        echo $keyword . "." . $domain . " no available" . "</br>";
-    }
+    // $array_suggest = array('sd');
+    // $table_name = $wpdb->prefix . "domainer";
+    
+    // $kjj = auth($keyword, $domain);
+    // if ($kjj == 1) {
+    //     echo $keyword . "." . $domain . " available" . "</br>";
+    // } else {
+    //     echo $keyword . "." . $domain . " no available" . "</br>";
+    // }
 
-    $c_domain = $wpdb->get_results("SELECT extension FROM $table_name where type=1 ORDER BY rand()");
+    // $c_domain = $wpdb->get_results("SELECT extension FROM $table_name where type=1 ORDER BY rand()");
 
-    foreach ($c_domain as $row):
-        echo $keyword . "." . $row->extension . "<br/>";
-        array_push($array_suggest, $keyword . "." . $row->extension);
-    endforeach;
-    $c_coloquiales = $wpdb->get_results("SELECT extension FROM $table_name where type=2 order by rand() ");
-    foreach ($c_coloquiales as $row):
-        echo $keyword . "." . $row->extension . "<br/>";
-        array_push($array_suggest, $row->extension . $keyword . "." . $domain);
-    endforeach;
+    // foreach ($c_domain as $row):
+    //     echo $keyword . "." . $row->extension . "<br/>";
+    //     array_push($array_suggest, $keyword . "." . $row->extension);
+    // endforeach;
+    // $c_coloquiales = $wpdb->get_results("SELECT extension FROM $table_name where type=2 order by rand() ");
+    // foreach ($c_coloquiales as $row):
+    //     echo $keyword . "." . $row->extension . "<br/>";
+    //     array_push($array_suggest, $row->extension . $keyword . "." . $domain);
+    // endforeach;
 
-    echo "</br><hr/>";
-    for ($i = 1; $i < count($array_suggest); $i++) {
-        echo $array_suggest[$i] . "</br>";
-    }
-    request_domains($array_suggest);
+    // echo "</br><hr/>";
+    // for ($i = 1; $i < count($array_suggest); $i++) {
+    //     echo $array_suggest[$i] . "</br>";
+    // }
+    // request_domains($array_suggest);
 
 }
 
@@ -189,62 +188,10 @@ function google()
 
 function domainer_instala()
 {
-
-    global $wpdb;
-    $table_name = $wpdb->prefix . "domainer";
-    $sql = "CREATE TABLE $table_name(
-		id mediumint( 9 ) NOT NULL AUTO_INCREMENT ,
-		extension tinytext NOT NULL ,
-		type SMALLINT NOT NULL DEFAULT 0,
-		PRIMARY KEY ( `id` )	
-	);";
-
-//    1 for all
-//    2 for coloquials
-//    3 for prefix
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (1,'com',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (2,'la',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (3,'io',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (4,'tech',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (5,'com',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (6,'pe',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (7,'net',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (8,'org',1);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (9,'super',2;";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (10,'hiper',2);";
-    $wpdb->query($sql);
-
-    $sql = "INSERT INTO $table_name VALUES (11,'last',2);";
-    $wpdb->query($sql);
-
 }
 
 function domainer_desinstala()
 {
-    global $wpdb;
-    $table_name = $wpdb->prefix . "domainer";
-    $sql = "DROP TABLE $table_name";
-    $wpdb->query($sql);
 }
 
 function domainer_panel()
@@ -261,25 +208,6 @@ function domainer_panel()
     if (isset($_POST['extension'])) {
         $domain = $_POST['extension'];
         $keyword = $_POST['keyword'];
-    }
-    //echo	 $domain;
-    //echo $keyword;
-}
-
-function ingresar_dominios()
-{
-    include('template/ing_dominios.html');
-    global $wpdb;
-    global $domain;
-    global $keyword;
-    $table_name = $wpdb->prefix . "domainers";
-    if (isset($_POST['domainer_inserta'])) {
-        $sql = "INSERT INTO $table_name (domainer) VALUES ('{$_POST['domainer_inserta']}');";
-        $wpdb->query($sql);
-    }
-    if (isset($_POST['punto_inserta'])) {
-        $domain = $_POST['punto_inserta'];
-        $keyword = $_POST['domainer_inserta'];
     }
     //echo	 $domain;
     //echo $keyword;
@@ -305,13 +233,21 @@ if (function_exists('add_action')) {
     add_action('admin_menu', 'domainer_add_menu');
 }
 
+function format_domain($keyword, $extension='.com'){
+    if(!stripos($keyword, '.')){
+        $keyword .= $extension; 
+    }
+    return $keyword;
+}
 
-function search_domain($keyword, $extension)
+function search_domain($keyword, $extension='com')
 {
-    $tmp = $keyword;
-    $i = stripos($keyword, '.');
-    $keyword = substr($tmp, 0, $i);
-    $extension = substr($tmp, strlen($keyword) + 1);
+    if(stripos($keyword, '.')){
+        $tmp = $keyword;
+        $i = stripos($keyword, '.');
+        $keyword = substr($tmp, 0, $i);
+        $extension = substr($tmp, strlen($keyword) + 1);
+    }
 
     $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
     // create a new cURL resource
@@ -345,7 +281,11 @@ function search_domain($keyword, $extension)
     }
 
     // close cURL resource, and free up system resources
-    curl_close($ch);
+    // curl_close($ch);
+    // if($result){
+    //     return $keyword . '.' . $extension;
+    // }
+    // return false;
     return $result;
 }
 
@@ -402,47 +342,43 @@ function search_domain_prefix($keyword, $extension)
     return $result;
 }
 
-function search_domain_extension($keyword, $extension)
+function search_domain_extension($keyword, $extension='com')
 {
-    $tmp = $keyword;
-    $i = stripos($keyword, '.');
-    $keyword = substr($tmp, 0, $i);
-    $extension = substr($tmp, strlen($keyword) + 1);
-
-    $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
-    // create a new cURL resource
-    $ch = curl_init();
-
-    // set URL and other appropriate options
-    curl_setopt($ch, CURLOPT_URL, $gaUrl);
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . "/cacert.pem");
-    $fileHandle = fopen(dirname(__FILE__) . "/error.txt", "w+");
-
-    curl_setopt($ch, CURLOPT_VERBOSE, true);
-    curl_setopt($ch, CURLOPT_STDERR, $fileHandle);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-    // grab URL and pass it to the browser
-    $response = curl_exec($ch);
-    $result = false;
-
-    if (curl_exec($ch) === false) {
-        echo 'Curl error: ' . curl_error($ch);
-    } else {
-        $response_json = json_decode($response);
-        $response_status = $response_json->{'' . $keyword . '.' . $extension . ''}->{"status"};
-        //echo $response_status;
-        if (strcmp($response_status, "available") == 0) {
-            $result = true;
-        }
-
+    if(stripos($keyword, '.')){
+        $tmp = $keyword;
+        $i = stripos($keyword, '.');
+        $keyword = substr($tmp, 0, $i);
+        $extension = substr($tmp, strlen($keyword) + 1);
     }
 
-    // close cURL resource, and free up system resources
-    curl_close($ch);
-    return $result;
+
+
+    $args = array( 'post_type' => 'product', 
+        'posts_per_page' => 10, 'product_cat' => 'dominio-extension', 'orderby' => 'id' );
+        $loop = new WP_Query( $args );
+        while ( $loop->have_posts() ) : $loop->the_post(); 
+            global $product; 
+            $fzpcr = new FZ_Product_Country_Restrictions();
+            echo $product->id.' tt '.$fzpcr->is_restricted($product).' __ ';
+            echo esc_attr($loop->post->post_title).'<br/>';
+        endwhile;
+        wp_reset_query();
+
+    $params = '';
+    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'com';
+    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'net';
+    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'org';
+    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'mx';
+    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'co';
+
+    $tokens = get_domains_by_params($params);
+    foreach ($tokens as $fila => $fila2):
+        $respuesta = $tokens->{$fila}->{'status'};
+        $llave = $tokens->{$fila}->{'classkey'};
+        //echo $fila;
+        echo $fila . " estado: " . $respuesta . " llave:" . $llave;
+        echo "</br>";
+    endforeach;    
 }
 
 function search_domain_others($keyword, $extension)
@@ -492,4 +428,129 @@ function search_domain_others($keyword, $extension)
 add_action('activate_domainer/domainer.php', 'domainer_instala');
 add_action('deactivate_domainer/domainer.php', 'domainer_desinstala');
 
+/*
+function show_domain_result($keyword, $is_available){
+    ?>
+    <div class="hero-content text-center"><i class="fa fa-check available"></i><i class="fa fa-close not-available hidden"></i>
+    <?php if($is_available): ?> 
+              <h5 class="available text-primary">DOMINIO DISPONIBLE</h5>
+    <?php else: ?>
+              <h5 class="not-available text-primary">DOMINIO NO DISPONIBLE</h5>
+    endif;?>
+              <div class="encabezado"> 
+                <h1><?php echo $keyword; ?></h1>
+                <div class="wrapper-plan">                
+                  <!--Precio -->
+                  <div class="price"><span class="igv">IGV incluido*</span><span class="oferta">Oferta</span><span class="moneda">S/.</span><span class="precio">120.00</span>
+                    <p class="price-before">Precio regular S/. <span class="tachado"> 140.00</span></p>
+                  </div>
+                  <div class="plazo">x 
+                    <div class="time-limit dropdown"><a data-toggle="dropdown" class="dropdown-toggle"><span class="time">1 año  </span><span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">2 años</a></li>
+                        <li><a href="#">3 años</a></li>
+                        <li><a href="#">4 años</a></li>
+                        <li><a href="#">5 años</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div><a href="#" class="btn btn-primary"><i class="fa fa-shopping-cart"> </i> ADQUIRIR</a>
+              </div>
+              <form class="search-domain form-inline">
+                <div class="form-group">
+                  <input type="text" placeholder="dominio.mx" class="form-control">
+                  <input type="submit" value="Buscar Dominio" class="form-control btn btn-primary">
+                </div>
+              </form>
+            </div>
+    <?php
+*/
 
+
+
+
+function insert_domain_result_table(){   
+    search_domain_extension($_GET['keyword']);
+    ?>
+    <table class="table results-table">
+            <tbody>
+            <!--No disponible-->
+            <tr class="not-available">
+                <td class="domain-name">busquedapopcorn.com<i class="fa fa-close"></i></td>
+                <td class="price">No disponible</td>
+                <td class="plazo"><span class="null"></span></td>
+                <td class="add"><a role="button" aria-disabled="true" class="btn-special btn-primary disabled">Agregar</a></td>
+            </tr>
+            <!--Disponible sin oferta-->
+            <tr>
+                <td class="domain-name">busqueda24.com<i class="fa fa-check"></i></td>
+                <td class="price"><span class="igv">IGV incluido*</span><span class="moneda">S/.</span><span class="precio">120.00</span>
+                </td>
+                <td class="plazo">x
+                    <div class="time-limit dropdown"><a data-toggle="dropdown" class="dropdown-toggle"><span class="time">1 año  </span><span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">2 años</a></li>
+                            <li><a href="#">3 años</a></li>
+                            <li><a href="#">4 años</a></li>
+                            <li><a href="#">5 años</a></li>
+                        </ul>
+                    </div>
+                </td>
+                <td class="add"><a href="#" class="btn-special btn-default">Agregar</a></td>
+            </tr>
+            <!--Disponible con Oferta-->
+            <tr>
+                <td class="domain-name">
+
+                    busqueda.club<i class="fa fa-check"></i>
+                </td>
+                <td class="price"><span class="igv">IGV incluido*</span><span class="oferta">Oferta</span><span class="moneda">S/.</span><span class="precio">120.00</span>
+                    <p class="price-before">Precio regular S/. <span class="tachado"> 140.00</span></p>
+                </td>
+                <td class="plazo">x
+                    <div class="time-limit dropdown"><a data-toggle="dropdown" class="dropdown-toggle"><span class="time">1 año  </span><span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">2 años</a></li>
+                            <li><a href="#">3 años</a></li>
+                            <li><a href="#">4 años</a></li>
+                            <li><a href="#">5 años</a></li>
+                        </ul>
+                    </div>
+                </td>
+                <td class="add"><a href="#" class="btn-special btn-default">Agregar</a></td>
+            </tr>
+            <!--agregado para comprar-->
+            <tr>
+                <td class="domain-name">
+
+                    busqueda.me<i class="fa fa-check"></i>
+                </td>
+                <td class="price"><span class="igv">IGV incluido*</span><span class="oferta">Oferta</span><span class="moneda">S/.</span><span class="precio">120.00</span>
+                    <p class="price-before">Precio regular S/. <span class="tachado"> 140.00</span></p>
+                </td>
+                <td class="plazo">x
+                    <div class="time-limit dropdown"><a data-toggle="dropdown" class="dropdown-toggle"><span class="time">1 año  </span><span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">2 años</a></li>
+                            <li><a href="#">3 años</a></li>
+                            <li><a href="#">4 años</a></li>
+                            <li><a href="#">5 años</a></li>
+                        </ul>
+                    </div>
+                </td>
+                <td class="add"><a href="#" class="btn-special btn-primary"><i class="fa fa-check"></i>Agregado</a></td>
+            </tr>
+            <!--para botón de ver más-->
+            <tr class="more">
+                <td colspan="4"><a href="#" class="btn-special btn-primary">Ver más</a></td>
+            </tr>
+            </tbody>
+            <!--Botón comprar-->
+            <tfoot>
+            <tr>
+                <td colspan="4"> <a href="#" class="btn btn-primary">Continuar compra</a></td>
+            </tr>
+            </tfoot>
+        </table>
+<?php
+}
