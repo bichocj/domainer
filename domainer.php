@@ -250,6 +250,12 @@ function search_domain($keyword, $extension='com')
     }
 
     $gaUrl = "https://httpapi.com/api/domains/available.json?auth-userid=653362&api-key=lbWlFolOR1UVZUBF1AsJfAHfNL1Jlicc&domain-name=" . $keyword . "&tlds=" . $extension;
+
+    $key = $extension;
+    if($key[0]!='.'){
+        $key = '.'.$extension;
+    }
+
     // create a new cURL resource
     $ch = curl_init();
 
@@ -274,8 +280,15 @@ function search_domain($keyword, $extension='com')
         $response_json = json_decode($response);
         $response_status = $response_json->{'' . $keyword . '.' . $extension . ''}->{"status"};
         //echo $response_status;
-        if (strcmp($response_status, "available") == 0) {
-            $result = true;
+        if (strcmp($response_status, "available") == 0) {            
+            $product = get_page_by_title( $key, OBJECT, 'product' );
+            if($product){
+                $_pf = new WC_Product_Factory();  
+                $result = $_pf->get_product($product->ID);                
+            }else{
+                $result = false;
+            }
+
         }
 
     }
@@ -351,34 +364,39 @@ function search_domain_extension($keyword, $extension='com')
         $extension = substr($tmp, strlen($keyword) + 1);
     }
 
-
+    $fzpcr = new FZ_Product_Country_Restrictions();
+    $params = '';
 
     $args = array( 'post_type' => 'product', 
         'posts_per_page' => 10, 'product_cat' => 'dominio-extension', 'orderby' => 'id' );
-        $loop = new WP_Query( $args );
-        while ( $loop->have_posts() ) : $loop->the_post(); 
-            global $product; 
-            $fzpcr = new FZ_Product_Country_Restrictions();
-            echo $product->id.' tt '.$fzpcr->is_restricted($product).' __ ';
-            echo esc_attr($loop->post->post_title).'<br/>';
-        endwhile;
-        wp_reset_query();
-
-    $params = '';
-    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'com';
-    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'net';
-    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'org';
-    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'mx';
-    $params .= "&domain-name=" . $keyword.= "&tlds=" . 'co';
-
+    $loop = new WP_Query( $args );
+    $tmp_products = array();
+    while ( $loop->have_posts() ) : $loop->the_post(); 
+        global $product;             
+        if(!$fzpcr->is_restricted($product)){
+            $ext  = esc_attr($loop->post->post_title);
+            if($ext[0] == '.'){
+                $ext = substr($ext,1);
+            }
+            $params .= "&domain-name=" . $keyword. "&tlds=" . $ext;
+            $key = $keyword.'.'.$ext;            
+            $tmp_products[$key] = $product;
+        }
+    endwhile;
+    wp_reset_query();
+        
+    $result = array();
     $tokens = get_domains_by_params($params);
+    if($tokens){
     foreach ($tokens as $fila => $fila2):
-        $respuesta = $tokens->{$fila}->{'status'};
-        $llave = $tokens->{$fila}->{'classkey'};
-        //echo $fila;
-        echo $fila . " estado: " . $respuesta . " llave:" . $llave;
-        echo "</br>";
+        $status = $tokens->{$fila}->{'status'};
+        $key = $tokens->{$fila}->{'classkey'};
+        if($status=='available'){
+            $result[$fila]=$tmp_products[$fila];
+        }
     endforeach;    
+    }
+    return $result;
 }
 
 function search_domain_others($keyword, $extension)
@@ -467,22 +485,75 @@ function show_domain_result($keyword, $is_available){
 */
 
 
+function insert_domain_search(){
+    $keyword = $_GET['keyword'];
+    $result = search_domain($keyword);        
+    $_GET['keyword'] = format_domain($_GET['keyword']);
+    if($result): $product = $result; $price = get_rounded_price($product->get_price()); ?>
+        <i class="fa fa-check available domain-found"></i>
+        <h5 class="available text-primary domain-found">DOMINIO DISPONIBLE</h5>
+    <?php else: ?>    
+        <i class="fa fa-close not-available domain-not-found"></i>
+        <h5 class="not-available text-primary domain-not-found">DOMINIO NO DISPONIBLE</h5>
+    <?php endif; ?>
+            <div class="encabezado">
+                <h1><?php echo $keyword; ?></h1>
+                <?php if($product): ?>
+                <div class="wrapper-plan domain-found">
+                    <!--Precio -->
+                    <div class="price">
+                    <?php if(show_igv()): ?><span class="igv">IGV incluido*</span><?php endif; ?>
+                    <?php if(has_offer($product)): ?><span class="oferta">Oferta</span><?php endif; ?>
+                    <span class="moneda"><?php echo get_woocommerce_currency_symbol($currency); ?></span>
+                    <span class="precio"><?php echo $price; ?></span>
+                        <?php if(has_offer($product)): ?>
+                        <p class="price-before">Precio regular <?php echo get_woocommerce_currency_symbol($currency); ?> 
+                        <span class="tachado"><?php echo $product->get_regular_price(); ?></span>
+                        </p>
+                    <?php endif; ?>
 
+                    </div>
+                    <!--Dropdown de plazo-->
+                    <div class="plazo">x
+                        <div class="time-limit dropdown"><a data-toggle="dropdown" class="dropdown-toggle"><span class="time">1 año  </span><span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">2 años</a></li>
+                                <li><a href="#">3 años</a></li>
+                                <li><a href="#">4 años</a></li>
+                                <li><a href="#">5 años</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <?php if($product): ?>
+                    <a href="#" class="btn btn-primary domain-found"><i class="fa fa-shopping-cart"> </i> ADQUIRIR</a>
+                <?php endif; ?>
+            </div>
+            <form class="search-domain form-inline">
+                <div class="form-group">
+                    <input type="text" name="keyword" placeholder="dominio.mx" class="form-control">
+                    <input type="submit" value="Buscar Dominio" class="form-control btn btn-primary">
+                </div>
+            </form>
+<?php
+}
 
 function insert_domain_result_table(){   
-    search_domain_extension($_GET['keyword']);
+    $result = search_domain_extension($_GET['keyword']);
     ?>
     <table class="table results-table">
             <tbody>
             <!--No disponible-->
-            <tr class="not-available">
+            <!-- <tr class="not-available">
                 <td class="domain-name">busquedapopcorn.com<i class="fa fa-close"></i></td>
                 <td class="price">No disponible</td>
                 <td class="plazo"><span class="null"></span></td>
                 <td class="add"><a role="button" aria-disabled="true" class="btn-special btn-primary disabled">Agregar</a></td>
-            </tr>
+            </tr> -->
             <!--Disponible sin oferta-->
-            <tr>
+            <!-- <tr>
                 <td class="domain-name">busqueda24.com<i class="fa fa-check"></i></td>
                 <td class="price"><span class="igv">IGV incluido*</span><span class="moneda">S/.</span><span class="precio">120.00</span>
                 </td>
@@ -497,15 +568,21 @@ function insert_domain_result_table(){
                     </div>
                 </td>
                 <td class="add"><a href="#" class="btn-special btn-default">Agregar</a></td>
-            </tr>
+            </tr> -->
             <!--Disponible con Oferta-->
+            <?php foreach ($result as $key => $product): $price = get_rounded_price($product->get_price()); ?>
             <tr>
-                <td class="domain-name">
-
-                    busqueda.club<i class="fa fa-check"></i>
+                <td class="domain-name"><?php echo $key;?><i class="fa fa-check"></i>
                 </td>
-                <td class="price"><span class="igv">IGV incluido*</span><span class="oferta">Oferta</span><span class="moneda">S/.</span><span class="precio">120.00</span>
-                    <p class="price-before">Precio regular S/. <span class="tachado"> 140.00</span></p>
+                <td class="price">
+                <?php if(show_igv()): ?><span class="igv">IGV incluido*</span><?php endif; ?>
+                <?php if(has_offer($product)): ?><span class="oferta">Oferta</span><?php endif; ?>
+                <span class="moneda"><?php echo get_woocommerce_currency_symbol($currency); ?></span><span class="precio"><?php echo $price; ?></span>
+                    <?php if(has_offer($product)): ?>
+                        <p class="price-before">Precio regular <?php echo get_woocommerce_currency_symbol($currency); ?> 
+                        <span class="tachado"><?php echo $product->get_regular_price(); ?></span>
+                        </p>
+                    <?php endif; ?>
                 </td>
                 <td class="plazo">x
                     <div class="time-limit dropdown"><a data-toggle="dropdown" class="dropdown-toggle"><span class="time">1 año  </span><span class="caret"></span></a>
@@ -519,8 +596,9 @@ function insert_domain_result_table(){
                 </td>
                 <td class="add"><a href="#" class="btn-special btn-default">Agregar</a></td>
             </tr>
+            <?php endforeach; ?>
             <!--agregado para comprar-->
-            <tr>
+            <!-- <tr>
                 <td class="domain-name">
 
                     busqueda.me<i class="fa fa-check"></i>
@@ -539,7 +617,7 @@ function insert_domain_result_table(){
                     </div>
                 </td>
                 <td class="add"><a href="#" class="btn-special btn-primary"><i class="fa fa-check"></i>Agregado</a></td>
-            </tr>
+            </tr> -->
             <!--para botón de ver más-->
             <tr class="more">
                 <td colspan="4"><a href="#" class="btn-special btn-primary">Ver más</a></td>
